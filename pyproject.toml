@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "the-daily-douglas"
+version = "0.1.0"
+description = "A personal newspaper on paper: four half-A4 pages, ready to fold."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{name = "Douglas Araujo"}]
+dependencies = ["reportlab>=4.4,<5", "pypdf>=6,<7", "tzdata>=2025.2"]
+
+[project.urls]
+Repository = "https://github.com/dodopok/the-daily-douglas"
+Issues = "https://github.com/dodopok/the-daily-douglas/issues"
+
+[project.scripts]
+daily-douglas = "daily_douglas.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+daily_douglas = ["assets/fonts/*.ttf", "assets/fonts/*.txt"]

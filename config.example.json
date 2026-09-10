@@ -1,0 +1,18 @@
+{
+  "name": "The Daily Douglas",
+  "motto": "Um jornal para começar o dia.",
+  "language": "pt-BR",
+  "timezone": "America/Sao_Paulo",
+  "printer": null,
+  "print_mode": "simplex",
+  "prepare_at": "08:00",
+  "ready_by": "08:30",
+  "sources": {
+    "liturgy": {"enabled": true, "provider": "estevao-mcp", "prayer_book": "loc_2019", "service": null, "bible_version": null},
+    "email": {"enabled": false, "provider": "gmail", "account": null},
+    "tasks": {"enabled": false, "provider": "todoist"},
+    "calendar": {"enabled": false, "provider": "google-calendar", "account": null, "calendar_id": null},
+    "news": ["tabnews", "hackernews"],
+    "reddit": ["Anglicanism", "brdev"]
+  }
+}

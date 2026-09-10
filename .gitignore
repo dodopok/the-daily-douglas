@@ -1,0 +1,23 @@
+# Personal content and generated editions
+/outputs/
+/work/
+/state/
+/private/
+config.local.json
+*.local.json
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials*.json
+token*.json
+# Python/build/editor files
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+/build/
+/dist/
+.DS_Store
+.coverage

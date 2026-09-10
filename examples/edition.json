@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "date": "2026-01-01",
+  "issue": "000",
+  "is_demo": true,
+  "pages": [
+    {
+      "section": "Capa",
+      "headline": "O mundo cabe\nna mesa do café",
+      "intro": "Uma pausa de papel antes do primeiro clique. Informação, curiosidade e espaço para pensar.",
+      "illustration": "morning",
+      "articles": [
+        {"title": "Bom dia, leitor", "paragraphs": ["Este exemplar é uma demonstração. Ele mostra como um jornal pessoal pode reunir assuntos importantes em quatro páginas, com começo, meio e fim.", "O nome, as seções e o conteúdo podem mudar. O ritual permanece: sentar, abrir o jornal e escolher o que merece atenção."]},
+        {"title": "Nesta edição", "paragraphs": ["Fé e cotidiano: o lugar da oração na manhã. Página 2.", "Tecnologia: boas perguntas antes da próxima ferramenta. Página 3.", "Vida e comunidade: prioridades e uma tirinha para terminar. Página 4."]}
+      ]
+    },
+    {
+      "section": "Fé & cotidiano",
+      "headline": "Primeiro, um tempo\npara a oração",
+      "intro": "Uma seção opcional para o calendário litúrgico, a coleta e as leituras da tradição escolhida pelo leitor.",
+      "articles": [
+        {"title": "Um lugar para a liturgia", "paragraphs": ["A edição diária pode trazer a celebração, o tempo litúrgico, a cor e a coleta. Os dados devem vir da fonte escolhida e corresponder à data do jornal.", "Este exemplo não atribui uma celebração ao dia da capa. Os dados reais entram quando a fonte litúrgica estiver conectada."], "source": {"label": "Conheça o Estêvão MCP", "url": "https://github.com/dodopok/estevao-mcp"}},
+        {"title": "À escuta da Palavra", "paragraphs": ["As leituras precisam identificar o ofício ou a celebração a que pertencem. Referências curtas permitem consultar os textos completos com calma.", "Quem quiser imprimir os textos integrais pode reservar mais espaço da edição para eles. O limite de papel pede uma escolha editorial, sem apertar a letra até perder o conforto." ]},
+        {"title": "À margem do dia", "paragraphs": ["Uma intenção de oração, o nome de alguém ou uma frase que você queira levar consigo. O papel também é um lugar para escrever."]}
+      ]
+    },
+    {
+      "section": "Tecnologia",
+      "headline": "Menos abas abertas.\nMais contexto.",
+      "intro": "Notas editoriais de demonstração. Uma edição real trará notícias consultadas, com data e referência às fontes.",
+      "articles": [
+        {"title": "O que mudou?", "paragraphs": ["Uma novidade pode render manchete. Uma mudança que afeta o trabalho merece contexto: o que aconteceu, por que interessa e onde ler mais.", "As melhores notas deixam claro o alcance de uma mudança. A experiência de uma pessoa pode iniciar uma conversa; uma documentação oficial ajuda a conferir os detalhes."], "source": {"label": "Hacker News", "url": "https://news.ycombinator.com/"}},
+        {"title": "Ideias que ficam", "paragraphs": ["Uma boa seleção combina novidades com ideias duradouras. Um texto sobre manutenção, uma ferramenta pequena ou um relato de projeto pode continuar útil depois que a conversa do momento passa."], "source": {"label": "TabNews", "url": "https://www.tabnews.com.br/"}},
+        {"title": "A conversa também importa", "paragraphs": ["Comunidades acrescentam experiências e perguntas à leitura. A edição deve indicar quando está resumindo uma opinião e oferecer o caminho para o tópico original."]}
+      ]
+    },
+    {
+      "section": "Vida & comunidade",
+      "headline": "O que cabe no dia",
+      "intro": "Tarefas e compromissos de exemplo. Use a margem, a caneta e um pouco de espaço para o imprevisto.",
+      "articles": [
+        {"title": "Três prioridades", "paragraphs": [], "items": ["Escolher o foco da manhã.", "Resolver uma pendência importante.", "Fazer uma pausa para ler."]},
+        {"title": "Agenda & correio", "paragraphs": ["A agenda real pode mostrar horários e compromissos. O correio pode destacar remetente, assunto e ação esperada.", "Este exemplo não contém mensagens ou compromissos pessoais."]}
+      ],
+      "comic": {"title": "A vida em três quadros", "panels": ["Pedi um resumo do dia.", "A impressora levou a sério.", "Ela imprimiu o backlog."]}
+    }
+  ]
+}
