@@ -5,12 +5,12 @@ diagrama e prepara a impressão. Cada instalação usa suas próprias contas.
 
 | Fonte | Como alimentar o jornal |
 |---|---|
-| Gmail | Conecte o Gmail ao assistente e escolha conta, marcadores e critérios de importância. |
+| Gmail | Conecte o Gmail ao assistente e escolha conta, marcadores e critérios de importância. Para entregar o jornal, o Codex pode criar um rascunho ou enviar os PDFs pela conexão autenticada quando você escolher essa opção. |
 | Todoist | Conecte o app ou MCP oficial; selecione tarefas com prazo e prioridades. |
 | Google Agenda | Conecte a conta desejada e identifique o calendário. Uma conta pessoal não dá acesso automático à corporativa. |
-| Estêvão | Conecte o [Estêvão MCP](https://github.com/dodopok/estevao-mcp) e escolha livro, ofício e tradução. A disponibilidade depende da conta e do livro. |
+| Estêvão | Conecte o [Estêvão MCP](https://estevao.caminhoanglicano.com.br/mcp) e escolha livro, ofício e tradução. A disponibilidade depende da conta e do livro. |
 | Hacker News | Consulte a [API oficial](https://github.com/HackerNews/API) ou as ferramentas de navegação do assistente. |
-| TabNews | Consulte os conteúdos públicos e a [API do projeto](https://github.com/filipedeschamps/tabnews.com.br). |
+| TabNews | Consulte os conteúdos públicos no [endpoint da API](https://www.tabnews.com.br/api/v1/contents) e, quando necessário, abra a [página do projeto](https://github.com/filipedeschamps/tabnews.com.br) para conferir o contexto. |
 | Reddit | Use um acesso autorizado disponível. A [API exige aprovação](https://support.reddithelp.com/hc/en-us/articles/14945211791892-Developer-Platform-Accessing-Reddit-Data); não presuma que um endpoint público será sempre acessível. |
 
 Nenhum desses adaptadores é embutido no pacote Python 0.1.0. A skill usa as

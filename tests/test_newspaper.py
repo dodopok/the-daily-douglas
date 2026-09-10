@@ -8,9 +8,10 @@ import unittest
 from unittest.mock import patch
 
 from pypdf import PdfReader
+from daily_douglas.emailing import EmailError, prepare_email
 from daily_douglas.model import EditionError, load_config, load_edition, validate_edition
 from daily_douglas.printing import PrintError, print_edition
-from daily_douglas.render import LayoutError, render_edition
+from daily_douglas.render import LayoutError, format_date_pt_br, render_edition
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -47,6 +48,12 @@ class NewspaperTests(unittest.TestCase):
         for entry in self.manifest['files'].values():
             self.assertEqual(hashlib.sha256((self.directory / entry['path']).read_bytes()).hexdigest(), entry['sha256'])
 
+    def test_brazilian_date_is_rendered_and_recorded(self):
+        self.assertEqual(format_date_pt_br('2026-09-10'), '10 de setembro de 2026')
+        self.assertEqual(self.manifest['display_date'], '1 de janeiro de 2026')
+        reading = PdfReader(self.directory / self.manifest['files']['reading']['path'])
+        self.assertIn('1 de janeiro de 2026', reading.pages[0].extract_text())
+
     def test_title_markup_is_literal_content(self):
         edition = copy.deepcopy(self.edition)
         edition['pages'][2]['articles'][0]['title'] = '<b>Literal & safe</b>'
@@ -74,6 +81,30 @@ class NewspaperTests(unittest.TestCase):
         edition['pages'][0]['articles'][0]['source'] = {'label': 'bad', 'url': 'javascript:alert(1)'}
         with self.assertRaises(EditionError):
             validate_edition(edition)
+
+    def test_multiple_sources_are_supported(self):
+        edition = copy.deepcopy(self.edition)
+        article = edition['pages'][2]['articles'][0]
+        article.pop('source', None)
+        article['sources'] = [
+            {'label': 'Fonte A', 'url': 'https://example.com/a'},
+            {'label': 'Fonte B', 'url': 'https://example.org/b'},
+        ]
+        with tempfile.TemporaryDirectory() as output:
+            path = render_edition(edition, self.config, output)
+            manifest = json.loads(path.read_text(encoding='utf-8'))
+            text = PdfReader(Path(output) / manifest['files']['reading']['path']).pages[2].extract_text()
+            self.assertIn('Fonte A / example.com', text)
+            self.assertIn('Fonte B / example.org', text)
+
+    def test_email_descriptor_checks_pdfs_and_recipients(self):
+        result = prepare_email(self.manifest_path, 'voce@example.com, outra@example.org')
+        self.assertEqual(result['status'], 'ready_for_gmail')
+        self.assertEqual(result['to'], 'voce@example.com, outra@example.org')
+        self.assertIn('1 de janeiro de 2026', result['subject'])
+        self.assertEqual([item['mime_type'] for item in result['attachments']], ['application/pdf', 'application/pdf'])
+        with self.assertRaises(EmailError):
+            prepare_email(self.manifest_path, 'endereco-invalido')
 
     def test_dry_run_does_not_spawn_or_write_state(self):
         with tempfile.TemporaryDirectory() as directory, patch('daily_douglas.printing.subprocess.run') as run:

@@ -40,6 +40,16 @@ On overflow, edit the content to fit; never quietly omit a reading or an article
 Render the PDFs to images with the PDF tools available in the environment and
 inspect all four reading pages and both A4 sheets before printing.
 
+After review, honor the explicit delivery choice for the run (`print` or
+`email`). If no delivery choice was given, leave both PDFs ready for review.
+For printing, use the
+existing `daily-douglas print` flow. For e-mail, use the authenticated Codex
+Gmail connection: create a draft with both PDFs attached when the user wants to
+review it, or send only when the user explicitly asks for the message to be
+sent. The local Python package cannot inherit Gmail OAuth; its
+`daily-douglas email MANIFEST --to ...` command only verifies the PDFs and emits
+a request descriptor for the connection.
+
 ## Print and deliver
 
 Rendering does not authorize physical printing. Use the user's existing request

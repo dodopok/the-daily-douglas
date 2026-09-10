@@ -1,10 +1,12 @@
 """Portable composition with overflow detection and booklet imposition."""
 import hashlib
+from datetime import date
 from html import escape
 import json
 import math
 from pathlib import Path
 import tempfile
+from urllib.parse import urlsplit
 
 from pypdf import PdfReader, PdfWriter, Transformation
 from reportlab.lib.enums import TA_JUSTIFY, TA_LEFT, TA_CENTER
@@ -22,10 +24,23 @@ M, GAP = 27, 16
 WIDTH = W - M * 2
 COL = (WIDTH - GAP) / 2
 FONT_DIR = Path(__file__).parent / 'assets' / 'fonts'
+BODY_SIZE, BODY_LEADING = 8.6, 11.2
+ARTICLE_HEADING_SIZE, ARTICLE_HEADING_LEADING = 15.5, 17.4
+SOURCE_SIZE, SOURCE_LEADING = 6.8, 8.4
+PT_BR_MONTHS = (
+    'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+    'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
+)
 
 
 class LayoutError(EditionError):
     pass
+
+
+def format_date_pt_br(value):
+    """Format an ISO civil date for the newspaper's Brazilian Portuguese UI."""
+    parsed = date.fromisoformat(value)
+    return f'{parsed.day} de {PT_BR_MONTHS[parsed.month - 1]} de {parsed.year}'
 
 
 def fonts():
@@ -44,7 +59,7 @@ def safe(text):
     return escape(text).replace('\n', '<br/>')
 
 
-def paragraph(text, size=9.3, leading=12.7, font='DD-Body', align=TA_JUSTIFY, markup=False):
+def paragraph(text, size=BODY_SIZE, leading=BODY_LEADING, font='DD-Body', align=TA_JUSTIFY, markup=False):
     return Paragraph(text if markup else safe(text), ParagraphStyle(
         'newspaper', fontName=font, fontSize=size, leading=leading,
         alignment=align, textColor='#111111', splitLongWords=True))
@@ -132,7 +147,12 @@ class Columns:
             self.next()
 
     def article(self, article, first=False):
-        heading = paragraph(article['title'], 17, 19, 'DD-Bold', TA_LEFT)
+        # Keep a heading with the beginning of its article when possible. A
+        # whole article may be taller than the remaining space, so the body is
+        # allowed to continue in the next column instead of forcing overflow.
+        if not first and self.column == 0 and article_start_height(article) > self.y - self.bottom:
+            self.next()
+        heading = paragraph(article['title'], ARTICLE_HEADING_SIZE, ARTICLE_HEADING_LEADING, 'DD-Bold', TA_LEFT)
         _, height = heading.wrap(COL, H)
         if self.y - self.bottom < height + 38:
             self.next()
@@ -151,23 +171,45 @@ class Columns:
                 raise LayoutError('A checklist item is too long for a column')
             self.c.setLineWidth(.55); self.c.rect(self.x, self.y - 10, 6, 6)
             self.add(p, inset=14, gap=10)
-        if 'source' in article:
-            source = article['source']
-            text = f'<link href="{escape(source["url"], quote=True)}">{safe(source["label"])}</link>'
-            self.add(paragraph(text, 7.2, 9.3, 'DD-Italic', TA_LEFT, markup=True), gap=9)
+        for source in article_sources(article):
+            domain = urlsplit(source['url']).netloc.removeprefix('www.')
+            source_label = f'{source["label"]} / {domain}'
+            text = f'<link href="{escape(source["url"], quote=True)}">{safe(source_label)}</link>'
+            self.add(paragraph(text, SOURCE_SIZE, SOURCE_LEADING, 'DD-Italic', TA_LEFT, markup=True), gap=6)
         self.y -= 5
+
+
+def article_sources(article):
+    """Return one or more clickable references while keeping the old `source` field."""
+    if 'sources' in article:
+        return article['sources']
+    return [article['source']] if 'source' in article else []
+
+
+def article_start_height(article):
+    """Height needed to place a heading and the first piece of its content."""
+    _, total = paragraph(article['title'], ARTICLE_HEADING_SIZE, ARTICLE_HEADING_LEADING, 'DD-Bold', TA_LEFT).wrap(COL, H * 20)
+    total += 8
+    if article.get('paragraphs'):
+        total += paragraph(article['paragraphs'][0]).wrap(COL, H * 20)[1] + 8
+    else:
+        first_item = paragraph(article['items'][0], align=TA_LEFT)
+        total += first_item.wrap(COL - 14, H * 20)[1] + 10
+    return total
 
 
 def article_height(article):
     """Estimate a complete article to balance columns at article boundaries."""
-    _, total = paragraph(article['title'], 17, 19, 'DD-Bold', TA_LEFT).wrap(COL, H * 20)
+    _, total = paragraph(article['title'], ARTICLE_HEADING_SIZE, ARTICLE_HEADING_LEADING, 'DD-Bold', TA_LEFT).wrap(COL, H * 20)
     total += 8 + 5
     for body in article['paragraphs']:
         total += paragraph(body).wrap(COL, H * 20)[1] + 8
     for item in article.get('items', []):
         total += paragraph(item, align=TA_LEFT).wrap(COL - 14, H * 20)[1] + 10
-    if 'source' in article:
-        total += paragraph(article['source']['label'], 7.2, 9.3, 'DD-Italic', TA_LEFT).wrap(COL, H * 20)[1] + 9
+    for source in article_sources(article):
+        domain = urlsplit(source['url']).netloc.removeprefix('www.')
+        source_label = f'{source["label"]} / {domain}'
+        total += paragraph(source_label, SOURCE_SIZE, SOURCE_LEADING, 'DD-Italic', TA_LEFT).wrap(COL, H * 20)[1] + 6
     return total
 
 
@@ -218,11 +260,12 @@ def comic(c, data, asset_root):
 def reading_pdf(edition, config, destination, asset_root):
     fonts()
     c = Canvas(str(destination), pagesize=(W, H), pageCompression=1)
-    c.setTitle(f'{config["name"]} | {edition["date"]}')
+    display_date = format_date_pt_br(edition['date'])
+    c.setTitle(f'{config["name"]} | {display_date}')
     c.setAuthor(config['name'])
     c.setSubject('DEMO - fictional sample content' if edition['is_demo'] else 'Personal daily newspaper')
     for i, page in enumerate(edition['pages']):
-        footer = 'DEMO / CONTEÚDO DE EXEMPLO' if edition['is_demo'] else edition['date']
+        footer = 'DEMO / CONTEÚDO DE EXEMPLO' if edition['is_demo'] else display_date
         rule(c, M, 31, W - M)
         label(c, footer, M, 20, 6.2)
         label(c, f'{page["section"].upper()} / {i + 1}', W - M, 20, 6.2, right=True, max_width=WIDTH * .43)
@@ -230,13 +273,13 @@ def reading_pdf(edition, config, destination, asset_root):
             label(c, config['motto'].upper(), W / 2, H - 30, 6.6, center=True, max_width=WIDTH)
             label(c, config['name'], W / 2, H - 79, 39, 'DD-Name', center=True, max_width=WIDTH)
             rule(c, M, H - 90, W - M, 1.2); rule(c, M, H - 94, W - M)
-            label(c, edition['date'], M, H - 107, 6.5)
+            label(c, display_date, M, H - 107, 6.5, max_width=WIDTH * .5)
             label(c, f'Nº {edition["issue"]}' + (' / DEMO' if edition['is_demo'] else ''), W - M, H - 107, 6.5, right=True, max_width=WIDTH / 2)
             rule(c, M, H - 117, W - M)
             y = H - 132
         else:
             label(c, config['name'], M, H - 34, 19, 'DD-Name', max_width=WIDTH * .7)
-            label(c, edition['date'], W - M, H - 31, 6.5, right=True)
+            label(c, display_date, W - M, H - 31, 6.5, right=True, max_width=WIDTH * .5)
             rule(c, M, H - 44, W - M, 1)
             label(c, page['section'].upper(), M, H - 59, 7.2)
             y = H - 78
@@ -293,7 +336,8 @@ def render_edition(edition, config, output_dir, asset_root=Path('.')):
         work = Path(temporary)
         reading_pdf(edition, config, work / names['reading'], Path(asset_root))
         impose(work / names['reading'], work / names['print'])
-        manifest = {'schema_version': 1, 'date': edition['date'], 'is_demo': edition['is_demo'],
+        manifest = {'schema_version': 1, 'date': edition['date'], 'display_date': format_date_pt_br(edition['date']),
+                    'is_demo': edition['is_demo'],
                     'name': config['name'], 'imposition': [[4, 1], [2, 3]], 'files': {}}
         for kind, name in names.items():
             data = (work / name).read_bytes()

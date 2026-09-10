@@ -13,11 +13,14 @@ duas colunas, tirinha e montagem pronta para dobrar. Inspirado no
 - Geração de quatro páginas em meia folha A4, em ordem de leitura.
 - PDF de impressão com duas páginas A4 em paisagem: `[4 | 1]` e `[2 | 3]`.
 - Duas folhas impressas de um lado, ou uma folha frente e verso.
-- Conteúdo fornecido por um arquivo JSON: seções, artigos, fontes e listas.
+- Conteúdo fornecido por um arquivo JSON: seções, artigos, referências e listas.
+- Composição interna mais compacta (corpo de 8,6 pt) para trazer mais contexto,
+  com títulos preservados junto do texto e até quatro referências clicáveis por artigo.
 - Tirinha vetorial com legendas personalizáveis, ou imagem local própria.
 - Fontes abertas incluídas; não depende de fontes instaladas no Mac.
 - Detecção de excesso de texto: a edição falha com uma mensagem em vez de cortar conteúdo.
 - Impressão opcional pelo CUPS, com prévia e registro para evitar envios duplicados.
+- Entrega por e-mail preparada para a conexão Gmail do Codex, com os dois PDFs anexados.
 - Uma skill do Codex para buscar conteúdo nas conexões do próprio usuário.
 
 **O pacote Python não acessa suas contas nem escreve notícias por conta própria.**
@@ -25,43 +28,83 @@ Ele transforma conteúdo em PDF. A coleta e a redação ficam com o assistente e
 ferramentas conectadas, ou com uma integração que você escreva para produzir o JSON.
 Clonar este projeto não copia contas conectadas, autorizações ou tarefas agendadas.
 
-## Experimente sem conectar nenhuma conta
+## Comece aqui, sem conhecimento técnico
 
-Requer Python 3.11 ou superior.
+Você pode testar o jornal de exemplo sem conectar Gmail, calendário ou qualquer
+outra conta. O programa roda no seu próprio computador; os comandos abaixo são
+digitados no **Terminal** (macOS/Linux) ou no **PowerShell** (Windows).
+
+### 1. Instale os dois programas necessários
+
+Instale o [Python 3.11 ou mais recente](https://www.python.org/downloads/).
+Para baixar o projeto pelo comando `git clone`, instale também o [Git](https://git-scm.com/downloads).
+Se preferir, no GitHub use **Code > Download ZIP**, descompacte o arquivo e pule
+o primeiro comando abaixo.
+
+### 2. Baixe e instale o jornal
+
+No macOS ou Linux:
 
 ```sh
 git clone https://github.com/dodopok/the-daily-douglas.git
 cd the-daily-douglas
-python -m venv .venv
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install .
 ```
 
-Ative o ambiente com `source .venv/bin/activate` no macOS/Linux ou
-`.venv\Scripts\Activate.ps1` no PowerShell. Depois:
+No Windows, abra o PowerShell na pasta em que quer guardar o projeto:
+
+```powershell
+git clone https://github.com/dodopok/the-daily-douglas.git
+cd the-daily-douglas
+py -3 -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install .
+```
+
+O ambiente virtual (`.venv`) deixa as dependências deste jornal separadas dos
+outros programas do computador. Sempre que abrir um novo Terminal para trabalhar
+no projeto, entre na pasta e ative-o novamente (`source .venv/bin/activate` no
+macOS/Linux ou `.venv\Scripts\Activate.ps1` no Windows).
+
+### 3. Gere o exemplo
 
 ```sh
-python -m pip install .
 daily-douglas validate examples/edition.json
 daily-douglas render examples/edition.json --output-dir outputs/demo
 ```
 
-Abra `outputs/demo/2026-01-01-demo-reading.pdf` para ler e
-`outputs/demo/2026-01-01-demo-a4.pdf` para imprimir.
+Se aparecer `status: valid` e depois `status: rendered`, deu certo. Abra estes
+arquivos na pasta `outputs/demo`:
+
+- `2026-01-01-demo-reading.pdf`: quatro páginas para ler na tela.
+- `2026-01-01-demo-a4.pdf`: duas páginas A4 já montadas para imprimir e dobrar.
+- `2026-01-01-demo-manifest.json`: ficha técnica usada pelos comandos de entrega.
+
 O exemplo é explicitamente demonstrativo, não uma edição factual daquela data.
 
-## Personalize
+## Crie seu jornal pessoal
 
-Copie `config.example.json` para `config.local.json`. Troque o nome do jornal,
-o lema, as fontes de conteúdo e as preferências de impressão.
-`config.local.json` é ignorado pelo Git.
+Copie `config.example.json` para `config.local.json` e troque apenas o que quiser:
+nome do jornal, lema, fuso horário e preferências de impressão. Esse arquivo é
+local e fica fora do Git; não coloque senhas nele.
 
 ```sh
+cp config.example.json config.local.json
 daily-douglas render examples/edition.json --config config.local.json
 ```
 
-Você pode ter um jornal de tecnologia, um boletim de família, uma edição de
-notícias locais ou qualquer combinação que caiba nas quatro páginas.
-A seção litúrgica é opcional. O exemplo usa o Estêvão e permite escolher o livro
-de oração; o código `loc_2019` corresponde ao ACNA 2019 em português no projeto Estêvão.
+O conteúdo do jornal fica em um arquivo JSON. Você pode ter um jornal de
+tecnologia, um boletim de família, notícias locais ou qualquer combinação que
+caiba nas quatro páginas. A seção litúrgica é opcional. O formato está explicado
+em [docs/content.md](docs/content.md), com um exemplo completo em
+`examples/edition.json`.
+
+O gerador não busca notícias sozinho. Para uma edição diária, alguém precisa
+fornecer o JSON: você pode escrever esse arquivo ou pedir ao Codex para coletar
+as fontes e montá-lo. O programa valida as referências, diagrama o texto e
+recusa uma edição cheia demais em vez de esconder conteúdo.
 
 Os campos `prepare_at` e `ready_by` documentam sua preferência. **Eles não criam um
 agendamento**: configure a rotina no seu aplicativo ou agendador.
@@ -69,50 +112,81 @@ agendamento**: configure a rotina no seu aplicativo ou agendador.
 Veja o [contrato do conteúdo](docs/content.md) e as
 [conexões e automação](docs/connections.md).
 
-## Use com Codex
+## Forma mais simples: usar com o Codex
 
-Abra este repositório como projeto e invoque:
+Se você não quer editar JSON, abra este repositório como um projeto no Codex e
+escreva algo parecido com:
 
 ```text
 Use $daily-newspaper para montar a edição de hoje, seguindo config.local.json.
-Gere os PDFs para minha revisão.
+Leia as fontes que estão conectadas ao Codex, gere os PDFs e me mostre o resultado.
+Depois, pergunte se devo imprimir ou enviar por e-mail.
 ```
 
-A skill está em `.agents/skills/daily-newspaper/SKILL.md`. Ela orienta a coleta,
-a redação e a composição, mas cada pessoa precisa conectar suas próprias fontes.
-Também é possível seguir suas instruções em outro assistente que consiga criar
-arquivos e executar o gerador.
+Para receber por e-mail, conecte o Gmail ao Codex, informe o endereço do destinatário
+e peça explicitamente **criar um rascunho** ou **enviar**. Para imprimir, informe a
+impressora e peça explicitamente a impressão. A conexão do Gmail pede as
+autorizações da sua conta; elas não são copiadas para este repositório. Consulte a
+[documentação oficial de plugins do Codex](https://learn.chatgpt.com/docs/plugins)
+se o Gmail ainda não aparecer entre as conexões.
 
-## Imprima e dobre
+A skill que orienta esse fluxo está em `.agents/skills/daily-newspaper/SKILL.md`.
+Ela coleta e redige usando as fontes disponíveis, mas não inventa acesso a contas
+que você não conectou.
+
+## Escolha: imprimir ou enviar por e-mail
+
+Depois de gerar e revisar os PDFs, escolha um dos caminhos abaixo. O arquivo
+`*-reading.pdf` é para leitura na tela; o `*-a4.pdf` é o arquivo já montado para
+impressão.
+
+### Imprimir
 
 O PDF A4 já contém duas páginas do jornal por folha. No diálogo de impressão,
 use **A4, paisagem, tamanho real (100%), uma página do PDF por folha**.
 
-**Duas folhas, impressão simples:** imprima as duas páginas do PDF em folhas
-separadas. Junte os lados em branco, alinhe o topo e dobre as duas folhas ao meio.
-A capa fica do lado de fora. Há superfícies em branco entre as folhas.
-
-**Uma folha, frente e verso:** use duplex pela borda curta. Faça uma prova no seu
-modelo de impressora, porque os nomes e a orientação das opções podem variar.
-
-No macOS/Linux com CUPS, consulte as filas com `lpstat -p -d`. Para ver o comando
-que seria enviado, sem imprimir:
+Para apenas conferir o que seria enviado à impressora:
 
 ```sh
 daily-douglas print outputs/demo/2026-01-01-demo-manifest.json --printer NOME_DA_FILA
 ```
 
-Depois de revisar o PDF, envie uma cópia:
+No macOS/Linux, descubra o nome da fila com `lpstat -p -d`. Para enviar de fato,
+revise o PDF e acrescente `--submit --reviewed`:
 
 ```sh
-daily-douglas print outputs/demo/2026-01-01-demo-manifest.json --printer NOME_DA_FILA --submit --reviewed
+daily-douglas print outputs/demo/2026-01-01-demo-manifest.json \
+  --printer NOME_DA_FILA --submit --reviewed
 ```
 
-Acrescente `--mode duplex` para a futura impressão frente e verso.
-O registro em `state/` bloqueia novas tentativas para o mesmo jornal, data e tipo
-(exemplo ou edição real), inclusive após um resultado incerto. Confira o registro
-e a fila antes de tentar novamente. Aceitação pelo CUPS significa envio à fila,
-não confirmação de que o papel saiu. No Windows, use o PDF no diálogo de impressão.
+Com uma impressora duplex, acrescente `--mode duplex`. No Windows, abra o PDF A4
+no aplicativo de impressão do sistema. Para duas folhas, use impressão simples;
+para uma folha frente e verso, use a borda curta e faça uma prova antes.
+
+### Enviar por e-mail
+
+No Codex, a maneira mais fácil é pedir no chat: “envie a edição por Gmail para
+`voce@example.com`” e escolher entre rascunho e envio quando o Codex mostrar a
+mensagem.
+
+Quem usa o Terminal pode preparar o pedido assim:
+
+```sh
+daily-douglas email outputs/demo/2026-01-01-demo-manifest.json \
+  --to voce@example.com --request outputs/demo/email-request.json
+```
+
+Esse comando confere os hashes e cria um pedido com os dois PDFs anexados. Ele não
+guarda sua senha, não acessa o Gmail e não envia sozinho. No Codex, entregue esse
+pedido (`outputs/demo/email-request.json`) à conexão Gmail autenticada para criar o
+rascunho ou enviar a mensagem quando você tiver escolhido essa ação.
+
+Por exemplo, no chat do Codex: “leia `outputs/demo/email-request.json`, crie um
+rascunho no Gmail para mim e mostre a mensagem antes de enviar”.
+
+Se um comando mostrar `Error:`, copie a mensagem inteira. Erros de conteúdo ou de
+espaço significam que é preciso corrigir o JSON; o gerador não corta texto para
+fazer o arquivo caber.
 
 ## Desenvolvimento
 

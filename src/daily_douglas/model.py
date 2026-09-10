@@ -67,7 +67,7 @@ def validate_edition(data):
             raise EditionError(f'{at}.articles: expected one to ten articles')
         for j, article in enumerate(page['articles']):
             a = f'{at}.articles[{j}]'
-            obj(article, a, ['title', 'paragraphs'], ['items', 'source'])
+            obj(article, a, ['title', 'paragraphs'], ['items', 'source', 'sources'])
             text(article['title'], f'{a}.title', 100)
             paragraphs = article['paragraphs']
             if not isinstance(paragraphs, list) or len(paragraphs) > 20:
@@ -81,17 +81,22 @@ def validate_edition(data):
                 text(item, f'{a}.items', 300)
             if not paragraphs and not items:
                 raise EditionError(f'{a}: provide paragraphs or checklist items')
-            if 'source' in article:
-                source = article['source']
-                obj(source, f'{a}.source', ['label', 'url'])
-                text(source['label'], f'{a}.source.label', 100)
-                text(source['url'], f'{a}.source.url', 2000)
+            if 'source' in article and 'sources' in article:
+                raise EditionError(f'{a}: use source or sources, not both')
+            source_entries = [article['source']] if 'source' in article else article.get('sources', [])
+            if not isinstance(source_entries, list) or ('sources' in article and not 1 <= len(source_entries) <= 4):
+                raise EditionError(f'{a}.sources: expected up to four references')
+            for source_index, source in enumerate(source_entries):
+                source_path = f'{a}.source' if 'source' in article else f'{a}.sources[{source_index}]'
+                obj(source, source_path, ['label', 'url'])
+                text(source['label'], f'{source_path}.label', 100)
+                text(source['url'], f'{source_path}.url', 2000)
                 try:
                     url = urlsplit(source['url'])
                 except ValueError:
-                    raise EditionError(f'{a}.source.url: invalid URL') from None
+                    raise EditionError(f'{source_path}.url: invalid URL') from None
                 if url.scheme not in ('https', 'http') or not url.netloc or url.username or url.password:
-                    raise EditionError(f'{a}.source.url: expected an HTTP(S) URL without credentials')
+                    raise EditionError(f'{source_path}.url: expected an HTTP(S) URL without credentials')
         if 'comic' in page:
             if i != 3:
                 raise EditionError('comic is supported on the fourth page only')
